@@ -3,6 +3,7 @@ import 'package:delivery/common/const/data.dart';
 import 'package:delivery/common/layout/default_layout.dart';
 import 'package:delivery/common/view/root_tab.dart';
 import 'package:delivery/user/view/login_screen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -23,13 +24,27 @@ class _SplashScreenState extends State<SplashScreen> {
   //저장소에 토큰이 있는지 체크
   void checkToken() async {
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
-    final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
-    if(refreshToken == null || accessToken == null) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => LoginScreen(),), (route) => false,);
-    }else {
+    //final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
+    final dio = Dio();
+
+    try{
+      final response = await dio.post(
+        'http://$ip/auth/token',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+
+      await storage.write(key: ACCESS_TOKEN_KEY, value: response.data['accessToken'],);
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => RootTab(),), (route) => false,);
+    }catch(e) {
+      print(e);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => LoginScreen(),), (route) => false,);
     }
   }
 
