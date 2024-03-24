@@ -1,5 +1,6 @@
 import 'package:delivery/common/const/data.dart';
 import 'package:delivery/restaurant/component/restaurant_card.dart';
+import 'package:delivery/restaurant/model/restaurant_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -12,9 +13,9 @@ class RestaurantScreen extends StatelessWidget {
     final response = await dio.get(
       'http://$ip/restaurant',
       options: Options(
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-        }
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          }
       ),
     );
     return response.data['data'];
@@ -27,25 +28,14 @@ class RestaurantScreen extends StatelessWidget {
         child: FutureBuilder<List>(
           future: paginateRestaurant(),
           builder: (context, AsyncSnapshot<List> snapshot) {
-            if(!snapshot.hasData) {
+            if (!snapshot.hasData) {
               return Container();
             }
             return ListView.separated(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
-                final item = snapshot.data![index];
-                return RestaurantCard(
-                  image: Image.network( //네트워크 요청으로 이미지 가져오기
-                    'http://$ip${item['thumbUrl']}',
-                    fit: BoxFit.cover,
-                  ),
-                  name: item['name'],
-                  tags: List<String>.from(item['tags']),
-                  ratingsCount: item['ratingsCount'],
-                  deliveryTime: item['deliveryTime'],
-                  deliveryFee: item['deliveryFee'],
-                  ratings: item['ratings'],
-                );
+                final item = RestaurantModel.fromJson(json: snapshot.data![index],);
+                return RestaurantCard.fromModel(model: item,);
               },
               separatorBuilder: (context, index) {
                 return SizedBox(height: 16.0,);
