@@ -1,10 +1,21 @@
 import 'package:delivery/common/const/data.dart';
+import 'package:delivery/common/utils/data_utils.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+//flutter pub run build_runner build
+//flutter pub run build_runner watch - 변경될 때 마다 자동 빌드
+part 'restaurant_model.g.dart';
 
 enum RestaurantPriceRange { expensive, medium, cheap }
 
+@JsonSerializable()
 class RestaurantModel {
+
   final String id;
   final String name;
+  @JsonKey(
+    fromJson: DataUtils.pathToUrl, //직렬화 시 실행
+  )
   final String thumbUrl;
   final List<String> tags;
   final RestaurantPriceRange priceRange;
@@ -25,21 +36,16 @@ class RestaurantModel {
     required this.deliveryFee
   });
 
-  factory RestaurantModel.fromJson({
-    required Map<String, dynamic> json,
-  }) {
-    return RestaurantModel(
-        id: json['id'],
-        name: json['name'],
-        thumbUrl: 'http://$ip${json['thumbUrl']}',
-        tags: List<String>.from(json['tags']),
-        priceRange: RestaurantPriceRange.values.firstWhere((e)
-          => e.name == json['priceRange']
-        ),
-        ratings: json['ratings'],
-        ratingsCount: json['ratingsCount'],
-        deliveryTime: json['deliveryTime'],
-        deliveryFee: json['deliveryFee']
-    );
-  }
+  //json -> model
+  factory RestaurantModel.fromJson(Map<String, dynamic> json)
+    => _$RestaurantModelFromJson(json);
+
+  //model -> json
+  Map<String, dynamic> toJson() => _$RestaurantModelToJson(this);
+
+  //무조건 static
+  // static pathToUrl(String thumbUrl) {
+  //   return 'http://$ip$thumbUrl';
+  // }
+
 }
