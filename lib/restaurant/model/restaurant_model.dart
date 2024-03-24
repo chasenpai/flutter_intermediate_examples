@@ -1,4 +1,3 @@
-import 'package:delivery/common/const/data.dart';
 import 'package:delivery/common/utils/data_utils.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -8,7 +7,7 @@ part 'restaurant_model.g.dart';
 
 enum RestaurantPriceRange { expensive, medium, cheap }
 
-@JsonSerializable()
+@JsonSerializable() //Json 직렬화 자동
 class RestaurantModel {
 
   final String id;
