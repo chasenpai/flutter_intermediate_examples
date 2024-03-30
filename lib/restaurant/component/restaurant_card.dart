@@ -14,6 +14,7 @@ class RestaurantCard extends StatelessWidget {
   final double ratings;
   final bool isDetail;
   final String? detail;
+  final String? heroKey;
 
   const RestaurantCard({
     super.key,
@@ -26,6 +27,7 @@ class RestaurantCard extends StatelessWidget {
     required this.ratings,
     this.isDetail = false,
     this.detail,
+    this.heroKey,
   });
 
   factory RestaurantCard.fromModel({
@@ -45,6 +47,7 @@ class RestaurantCard extends StatelessWidget {
       ratings: model.ratings,
       isDetail: isDetail,
       detail: model is RestaurantDetailModel ? model.detail : null,
+      heroKey: model.id,
     );
   }
 
@@ -52,13 +55,20 @@ class RestaurantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if(isDetail)
-          image,
-        if(!isDetail)
-        ClipRRect( //테두리를 깎을 수 있음
-          child: image,
-          borderRadius: BorderRadius.circular(12.0),
-        ),
+        if(heroKey != null)
+          //Hero - 화면 전환 시 애니메이션 추가 - 이미지가 따라오는듯한?
+          Hero( //tag를 사용해서 위젯 연결
+            tag: ObjectKey(heroKey),
+            child: ClipRRect( //테두리를 깎을 수 있음
+              child: image,
+              borderRadius: BorderRadius.circular(isDetail ? 0 : 12.0),
+            ),
+          ),
+        if(heroKey == null)
+          ClipRRect(
+            child: image,
+            borderRadius: BorderRadius.circular(isDetail ? 0 : 12.0),
+          ),
         const SizedBox(height: 16.0,),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: isDetail ? 16.0 : 0),
