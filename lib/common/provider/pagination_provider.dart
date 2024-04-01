@@ -1,3 +1,4 @@
+import 'package:debounce_throttle/debounce_throttle.dart';
 import 'package:delivery/common/model/cursor_pagination_model.dart';
 import 'package:delivery/common/model/model_with_id.dart';
 import 'package:delivery/common/model/pagination_params.dart';
@@ -8,11 +9,24 @@ class PaginationProvider<T extends IModelWithId, U extends IBasePaginationReposi
     extends StateNotifier<CursorPaginationBase> {
 
   final U repository;
+  //쓰로틀링 - 함수가 호출되는 횟수와 상관없이 일정 간격으로 함수를 실행
+  final paginationThrottle = Throttle(
+    Duration(seconds: 3),
+    initialValue: _PaginationInfo(),
+    checkEquality: false, //함수를 실행할 때 넣어주는 값이 똑같으면 실행을 하지 않는다
+  );
 
   PaginationProvider({
     required this.repository,
   }): super(CursorPaginationLoading()) {
+    //1. paginate를 실행
     paginate();
+    //state - 처음에 initialValue, 그다음 setValue(val)
+    paginationThrottle.values.listen((state) {
+      //2. paginationThrottle에 실행하는 값이 들어오면 리스너에서 함수를 실행
+      _throttlePagination(state);
+    });
+
   }
 
   Future<void> paginate({
@@ -22,6 +36,21 @@ class PaginationProvider<T extends IModelWithId, U extends IBasePaginationReposi
     bool fetchMore = false,
     bool forceReFetch = false, //ture - 강제로 다시 로딩
   }) async {
+    paginationThrottle.setValue(
+      _PaginationInfo(
+        fetchCount: fetchCount,
+        fetchMore: fetchMore,
+        forceReFetch: forceReFetch,
+      ),
+    );
+  }
+
+  _throttlePagination(_PaginationInfo info) async {
+
+    final fetchCount = info.fetchCount;
+    final fetchMore = info.fetchMore;
+    final forceReFetch = info.forceReFetch;
+
     try{
       //1. CursorPagination - 정상적으로 데이터가 있는 상태
       //2. CursorPaginationLoading - 데이터가 로딩중인 상태(현재 캐시 없음)
@@ -98,4 +127,17 @@ class PaginationProvider<T extends IModelWithId, U extends IBasePaginationReposi
       state = CursorPaginationError(message: '데이터를 가져오지 못했습니다.');
     }
   }
+}
+
+class _PaginationInfo {
+
+  final int fetchCount;
+  final bool fetchMore;
+  final bool forceReFetch;
+
+  _PaginationInfo({
+    this.fetchCount = 20,
+    this.fetchMore = false,
+    this.forceReFetch = false,
+  });
 }

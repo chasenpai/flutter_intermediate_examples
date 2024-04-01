@@ -1,3 +1,4 @@
+import 'package:debounce_throttle/debounce_throttle.dart';
 import 'package:delivery/product/model/product_model.dart';
 import 'package:delivery/user/model/basket_item_model.dart';
 import 'package:delivery/user/model/patch_basket_body.dart';
@@ -15,8 +16,20 @@ final basketProvider = StateNotifierProvider
 class BasketProvider extends StateNotifier<List<BasketItemModel>> {
 
   final UserMeRepository repository;
+  //디바운스 - 함수를 마지막으로 호출한 후 일정 시간이 경과한 후에 함수가 실행되도록 한다
+  final updateBasketDebounce = Debouncer(
+    Duration(seconds: 1),
+    initialValue: null,
+    checkEquality: false, //함수를 실행할 때 넣어주는 값이 똑같으면 실행을 하지 않는다
+  );
 
-  BasketProvider({required this.repository,}): super([]);
+  BasketProvider({
+    required this.repository,
+  }): super([]) {
+    updateBasketDebounce.values.listen((state) {
+      patchBasket();
+    });
+  }
 
   Future<void> patchBasket() async {
     await repository.patchBasket(
@@ -57,7 +70,8 @@ class BasketProvider extends StateNotifier<List<BasketItemModel>> {
     //캐시를 먼저 업데이트하고 요청 - Optimistic Response
     //응답이 성공할거라 가정하고 상태를 먼저 업데이트
     //앱이 빨라보이는 효과를 줄 수 있다
-    await patchBasket();
+    //await patchBasket();
+    updateBasketDebounce.setValue(null);
   }
 
   Future<void> removeFromBasket({
@@ -83,6 +97,6 @@ class BasketProvider extends StateNotifier<List<BasketItemModel>> {
           : e,
       ).toList();
     }
-    await patchBasket();
+    updateBasketDebounce.setValue(null);
   }
 }
