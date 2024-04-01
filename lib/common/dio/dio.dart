@@ -1,5 +1,6 @@
 import 'package:delivery/common/const/data.dart';
 import 'package:delivery/common/secure_storage/secure_storage.dart';
+import 'package:delivery/user/provider/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,7 +11,8 @@ final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(secureStorageProvider);
   dio.interceptors.add(
     CustomInterceptor(
-      storage: storage
+      storage: storage,
+      ref: ref,
     )
   );
   return dio;
@@ -19,8 +21,12 @@ final dioProvider = Provider<Dio>((ref) {
 class CustomInterceptor extends Interceptor {
 
   final FlutterSecureStorage storage;
+  final Ref ref;
 
-  CustomInterceptor({required this.storage});
+  CustomInterceptor({
+    required this.storage,
+    required this.ref,
+  });
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -42,7 +48,6 @@ class CustomInterceptor extends Interceptor {
         'Authorization': 'Bearer $token',
       });
     }
-
     return super.onRequest(options, handler);
   }
 
@@ -59,6 +64,7 @@ class CustomInterceptor extends Interceptor {
     print('[ERROR] [${err.requestOptions.method}] ${err.requestOptions.uri}');
 
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+
     //리프레쉬 토큰이 없으면 에러 던짐
     if(refreshToken == null) {
       return handler.reject(err);
@@ -86,6 +92,8 @@ class CustomInterceptor extends Interceptor {
         final response = await dio.fetch(options); //토큰만 변경하고 재요청
         return handler.resolve(response); //응답 반환
       }on DioException catch(e) {
+        //circular dependency error
+        ref.read(authProvider.notifier).logout();
         return handler.reject(e);
       }
     }

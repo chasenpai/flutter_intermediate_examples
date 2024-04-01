@@ -45,7 +45,6 @@ class RestaurantStateNotifier
     final parsedState = state as CursorPagination;
     final response = await repository.getRestaurantDetail(id: id);
 
-
     if(!parsedState.data.where((e) => e.id == id).isEmpty) {
       //[Model(1), Model(2), Model(3)]
       //get detail 2

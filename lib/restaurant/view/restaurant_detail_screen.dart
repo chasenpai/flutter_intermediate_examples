@@ -9,12 +9,13 @@ import 'package:delivery/restaurant/model/restaurant_detail_model.dart';
 import 'package:delivery/restaurant/model/restaurant_model.dart';
 import 'package:delivery/restaurant/provider/restaurant_provider.dart';
 import 'package:delivery/restaurant/provider/restaurant_rating_provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletons/skeletons.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
+
+  static String get routeName => 'restaurantDetail';
 
   final String id;
 
