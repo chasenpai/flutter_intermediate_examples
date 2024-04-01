@@ -85,30 +85,36 @@ class _PaginationListViewState<T extends IModelWithId> extends ConsumerState<Pag
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ListView.separated(
-        controller: controller,
-        itemCount: cursorPagination.data.length + 1,
-        itemBuilder: (context, index) {
-          //추가 요청 시 로딩바
-          if(index == cursorPagination.data.length) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Center(
-                child: cursorPagination is CursorPaginationFetchingMore
-                    ? CircularProgressIndicator()
-                    : Text('더 이상 데이터가 없습니다.',),
-              ),
-            );
-          }
-          final item = cursorPagination.data[index];
-          return widget.itemBuilder(context, index, item);
+      child: RefreshIndicator(
+        onRefresh: () async {
+          ref.read(widget.provider.notifier).paginate(forceReFetch: true,);
         },
-        separatorBuilder: (context, index) {
-          return SizedBox(height: 16.0,);
-        },
+        child: ListView.separated(
+          //physics: AlwaysScrollableScrollPhysics(),
+          controller: controller,
+          itemCount: cursorPagination.data.length + 1,
+          itemBuilder: (context, index) {
+            //추가 요청 시 로딩바
+            if(index == cursorPagination.data.length) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Center(
+                  child: cursorPagination is CursorPaginationFetchingMore
+                      ? CircularProgressIndicator()
+                      : Text('더 이상 데이터가 없습니다.',),
+                ),
+              );
+            }
+            final item = cursorPagination.data[index];
+            return widget.itemBuilder(context, index, item);
+          },
+          separatorBuilder: (context, index) {
+            return SizedBox(height: 16.0,);
+          },
+        ),
       ),
     );
   }
